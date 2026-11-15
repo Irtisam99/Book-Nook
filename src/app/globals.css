@@ -1,26 +1,255 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-fraunces);
+  --font-display: var(--font-fraunces);
+  --color-gold: var(--gold);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: #f7f6f1;
+  --foreground: #1c1815;
+  --card: #fffdfa;
+  --card-foreground: #1c1815;
+  --popover: #fffdfa;
+  --popover-foreground: #1c1815;
+  --primary: #5b2a31;
+  --primary-foreground: #f9f7f2;
+  --secondary: #efece4;
+  --secondary-foreground: #1c1815;
+  --muted: #efece4;
+  --muted-foreground: #6f6862;
+  --accent: #efece4;
+  --accent-foreground: #1c1815;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #e5e0d6;
+  --input: #e5e0d6;
+  --ring: #b3905b;
+  --gold: #b3905b;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: #121010;
+  --foreground: #ece5da;
+  --card: #1a1716;
+  --card-foreground: #ece5da;
+  --popover: #1a1716;
+  --popover-foreground: #ece5da;
+  --primary: #cf7b62;
+  --primary-foreground: #2a130c;
+  --secondary: #211d1c;
+  --secondary-foreground: #ece5da;
+  --muted: #211d1c;
+  --muted-foreground: #a89e93;
+  --accent: #211d1c;
+  --accent-foreground: #ece5da;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #302b28;
+  --input: #302b28;
+  --ring: #d6b285;
+  --gold: #d6b285;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  /* Soft warm glow in the top-right corner for depth in dark mode */
+  .dark body {
+    background-image: radial-gradient(
+      55rem 36rem at 85% -8%,
+      rgb(207 123 98 / 8%),
+      transparent 60%
+    );
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Hero slider (Banner) ---------- */
+
+/* Hidden defaults apply only once Swiper has initialized (it adds the
+   `.swiper` class), so the prerendered first paint stays fully visible. */
+
+/* Copy: rise + de-blur, staggered per element */
+.swiper .banner-copy > * {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(8px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.85s ease;
+}
+.swiper .banner-slide.swiper-slide-active .banner-copy > * {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+.swiper .banner-slide.swiper-slide-active .banner-copy > *:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-copy > *:nth-child(2) {
+  transition-delay: 0.22s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-copy > *:nth-child(3) {
+  transition-delay: 0.34s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-copy > *:nth-child(4) {
+  transition-delay: 0.46s;
+}
+
+/* Eyebrow line draws itself out */
+.banner-line {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-line {
+  transform: scaleX(1);
+}
+
+/* Gold underline sweeps in beneath the italic accent word */
+.banner-accent {
+  position: relative;
+  white-space: nowrap;
+}
+
+/* Arch image: ken-burns zoom on the photo while the frame settles upward */
+.banner-arch {
+  opacity: 0.35;
+  transform: translateY(28px);
+  transition:
+    opacity 1s ease,
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.banner-arch img {
+  transform: scale(1.12);
+  transition: transform 2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.swiper .banner-slide.swiper-slide-active .banner-arch {
+  opacity: 1;
+  transform: translateY(0);
+}
+.swiper .banner-slide.swiper-slide-active .banner-arch img {
+  transform: scale(1);
+}
+
+/* Overlapping framed photo drifts in from the left with a slight tilt */
+.banner-overlay {
+  opacity: 0;
+  transform: translateX(-32px) rotate(-3deg);
+  transition:
+    opacity 0.9s ease 0.4s,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.4s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-overlay {
+  opacity: 1;
+  transform: translateX(0) rotate(0deg);
+}
+
+/* Book-of-the-month card floats up last */
+.banner-card {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.9s ease 0.6s,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.6s;
+}
+.swiper .banner-slide.swiper-slide-active .banner-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swiper .banner-copy > *,
+  .banner-arch,
+  .banner-arch img,
+  .banner-overlay,
+  .banner-card,
+  .banner-line {
+    transition: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
 }
