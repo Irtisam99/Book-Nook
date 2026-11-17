@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -42,7 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               'try{var t=localStorage.getItem("booknook-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}',
           }}
         />
+        <Navbar></Navbar>
         {children}
+        <Footer></Footer>
       </body>
     </html>
   );
