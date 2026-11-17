@@ -34,8 +34,8 @@ const steps = [
 
 export default function HowBorrowingWorks() {
   return (
-    <section className="bg-background">
-      <div className="mx-auto w-full max-w-[1280px] px-6 py-20 lg:py-28">
+    <section className="bg-white dark:bg-card">
+      <div className="mx-auto w-full max-w-[1280px] px-6 py-16 lg:py-24">
         {/* Heading */}
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-4">

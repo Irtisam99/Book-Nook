@@ -7,6 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-footer: var(--footer);
+  --color-footer-foreground: var(--footer-foreground);
+  --color-footer-muted: var(--footer-muted);
+  --color-footer-border: var(--footer-border);
   --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-fraunces);
@@ -53,11 +57,15 @@
 :root {
   --background: #fbfaf6;
   --foreground: #201c18;
+  --footer:#5b2a31;
+  --footer-foreground: #faf8f3;
+  --footer-muted: #d7c2bd;
+  --footer-border: rgb(250 248 243 / 16%);
   --card: #ffffff;
   --card-foreground: #201c18;
   --popover: #ffffff;
   --popover-foreground: #201c18;
-  --primary: #5b2a31;
+  --primary:#5b2a31;
   --primary-foreground: #faf8f3;
   --secondary: #f4f0e6;
   --secondary-foreground: #201c18;
@@ -89,6 +97,10 @@
 .dark {
   --background: #121010;
   --foreground: #ece5da;
+  --footer: #121010;
+  --footer-foreground: #ece5da;
+  --footer-muted: #a89e93;
+  --footer-border: rgb(236 229 218 / 12%);
   --card: #1a1716;
   --card-foreground: #ece5da;
   --popover: #1a1716;
