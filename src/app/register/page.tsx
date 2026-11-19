@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, Eye, EyeOff, Check } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -36,10 +38,16 @@ export default function RegisterPage() {
             }));
         }
     };
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isSubmitting) return;
+
         const form = new FormData(event.currentTarget);
+        const formElement = event.currentTarget;
+
         const name = String(form.get("name") ?? "").trim();
         const email = String(form.get("email") ?? "").trim();
         const photo = String(form.get("photo") ?? "").trim();
@@ -47,9 +55,8 @@ export default function RegisterPage() {
 
         if (name.length < 2) {
             nextErrors.name = "Enter at least 2 characters.";
-        }
-        if(/\d/.test(name)){
-            nextErrors.name = "Name canot contain numbers.";
+        } else if (/\d/.test(name)) {
+            nextErrors.name = "Name cannot contain numbers.";
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             nextErrors.email = "Enter a valid email address.";
@@ -74,11 +81,48 @@ export default function RegisterPage() {
 
         setErrors(nextErrors);
 
-        if (Object.keys(nextErrors).length === 0) {
-            event.currentTarget.reset();
-            setPassword("");
-            setPhotoUrl("");
+        if (Object.keys(nextErrors).length > 0) {
+            return;
         }
+
+        const user = Object.fromEntries(form.entries());
+        const fallbackImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name as string)}&background=5b2a31&color=ffffff&bold=true&length=1`;
+
+        setIsSubmitting(true);
+        try {
+            const { data, error } = await authClient.signUp.email({
+                name: user.name as string,
+                email: user.email as string,
+                password: password,
+                image: user.photo as string || fallbackImage
+            })
+
+            if (error) {
+                toast.error(error.message);
+                return;
+            }
+            if (data) {
+                toast.success("Registration successful!");
+                formElement.reset();
+                setPassword("");
+                setPhotoUrl("");
+                setErrors({});
+
+                window.location.replace(`${window.location.origin}/`);
+            }
+        } catch (error) {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Registration failed. Please try again."
+            );
+        }
+        finally {
+            setIsSubmitting(false);
+        }
+
+
+
     };
 
     return (
@@ -264,8 +308,8 @@ export default function RegisterPage() {
                                     >
                                         <span
                                             className={`mt-[2px] flex size-3 shrink-0 items-center justify-center rounded-full border ${rule.met
-                                                    ? "border-green-500 bg-green-500 text-white"
-                                                    : "border-border"
+                                                ? "border-green-500 bg-green-500 text-white"
+                                                : "border-border"
                                                 }`}
                                         >
                                             {rule.met && <Check className="size-2.5" strokeWidth={3} />}
@@ -281,9 +325,10 @@ export default function RegisterPage() {
 
                         <button
                             type="submit"
+                            disabled={isSubmitting}
                             className="h-[52px] w-full rounded-[3px] bg-primary text-[20px] font-semibold text-primary-foreground transition-colors hover:bg-primary/85"
                         >
-                            Register
+                            {isSubmitting ? "Creating account..." : "Register"}
                         </button>
                     </form>
 

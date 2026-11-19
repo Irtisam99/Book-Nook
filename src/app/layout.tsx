@@ -3,6 +3,8 @@ import { Fraunces, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
+
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -47,6 +49,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Navbar></Navbar>
         {children}
         <Footer></Footer>
+        <Toaster
+          position="top-center"
+          richColors
+          />
       </body>
     </html>
   );

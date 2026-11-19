@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,13 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fillDemoAccount = () => {
-    setEmail("eleanor@booknook.co");
-    setPassword("Heading1");
-    setErrors({});
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: Record<string, string> = {};
 
@@ -28,8 +24,42 @@ export default function LoginPage() {
     }
 
     setErrors(nextErrors);
-  };
 
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const user = Object.fromEntries(formData.entries());
+
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: user.email as string,
+        password: user.password as string,
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (data) {
+        toast.success("Login successful!");
+        formElement.reset();
+        setEmail("");
+        setPassword("");
+        setErrors({});
+        window.location.replace(`${window.location.origin}/`);
+
+      }
+
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again."
+      );
+    }
+  }
   return (
     <main className="grid min-h-[720px] grid-cols-1 bg-background lg:grid-cols-2">
       <section className="relative hidden min-h-[720px] overflow-hidden lg:block">
@@ -97,11 +127,10 @@ export default function LoginPage() {
                 }}
                 aria-invalid={Boolean(errors.email)}
                 placeholder="you@example.com"
-                className={`h-[52px] w-full rounded-[3px] border bg-card px-4 text-[13px] outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${
-                  errors.email
-                    ? "border-destructive focus:border-destructive"
-                    : "border-border focus:border-ring"
-                }`}
+                className={`h-[52px] w-full rounded-[3px] border bg-card px-4 text-[13px] outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.email
+                  ? "border-destructive focus:border-destructive"
+                  : "border-border focus:border-ring"
+                  }`}
               />
               {errors.email && (
                 <p className="mt-1.5 text-[10px] text-destructive">
@@ -138,11 +167,10 @@ export default function LoginPage() {
                   }}
                   aria-invalid={Boolean(errors.password)}
                   placeholder="Your password"
-                  className={`h-[52px] w-full rounded-[3px] border bg-card px-4 pr-12 text-[13px] outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${
-                    errors.password
-                      ? "border-destructive focus:border-destructive"
-                      : "border-border focus:border-ring"
-                  }`}
+                  className={`h-[52px] w-full rounded-[3px] border bg-card px-4 pr-12 text-[13px] outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.password
+                    ? "border-destructive focus:border-destructive"
+                    : "border-border focus:border-ring"
+                    }`}
                 />
                 <button
                   type="button"

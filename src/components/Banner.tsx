@@ -64,7 +64,13 @@ export default function Banner() {
             prevSlideMessage: "Previous slide",
             nextSlideMessage: "Next slide",
           }}
-          onSwiper={setSwiper}
+          initialSlide={0}
+          onSwiper={(instance) => {
+            setSwiper(instance);
+            setActive(instance.realIndex);
+            instance.update();
+            instance.slideToLoop(0, 0);
+          }}
           onSlideChange={(instance) => setActive(instance.realIndex)}
           className="w-full"
         >
