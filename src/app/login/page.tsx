@@ -60,6 +60,20 @@ export default function LoginPage() {
       );
     }
   }
+
+const handleGoogleLogin = async () => {
+  try{
+    const data=await authClient.signIn.social({
+      provider: "google",
+    })
+  }catch(error){
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Login failed. Please try again."
+    );
+  }
+}
   return (
     <main className="grid min-h-[720px] grid-cols-1 bg-background lg:grid-cols-2">
       <section className="relative hidden min-h-[720px] overflow-hidden lg:block">
@@ -210,6 +224,7 @@ export default function LoginPage() {
 
           <button
             type="button"
+            onClick={handleGoogleLogin}
             className="flex h-[52px] w-full items-center justify-center rounded-[3px] border border-border bg-card text-[15px] font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <svg

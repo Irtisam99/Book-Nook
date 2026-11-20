@@ -94,6 +94,7 @@ function AccountMenu({
   onNavigate?: () => void;
 }) {
   const router = useRouter();
+  const firstName = user.name.trim().split(/\s+/)[0] || user.name;
 
   async function handleSignOut() {
     const { error } = await authClient.signOut();
@@ -116,7 +117,7 @@ function AccountMenu({
       >
         <UserAvatar image={user.image} name={user.name} size="lg" />
         <span className="max-w-36 truncate text-[15px] font-medium text-foreground">
-          {user.name}
+          {firstName}
         </span>
         <ChevronDown
           className="size-5 text-muted-foreground transition-transform group-data-popup-open:rotate-180"

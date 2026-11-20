@@ -125,6 +125,20 @@ export default function RegisterPage() {
 
     };
 
+    const handleGoogleSignUp = async () => {
+        try{
+            const data=await authClient.signIn.social({
+                provider: "google",
+            })
+        }catch(error){
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Registration failed. Please try again."
+            );
+        }
+    }
+
     return (
         <main className="grid min-h-[720px] grid-cols-1 bg-background lg:grid-cols-2">
             <section className="relative hidden min-h-[720px] overflow-hidden lg:block">
@@ -173,6 +187,7 @@ export default function RegisterPage() {
 
                     <button
                         type="button"
+                        onClick={handleGoogleSignUp}
                         className="flex h-[52px] w-full items-center justify-center rounded-[3px] border border-border bg-card text-[16px] font-semibold text-foreground transition-colors hover:bg-muted"
                     >
                         <svg className="mr-3 size-[17px]" viewBox="0 0 18 18" aria-hidden="true">

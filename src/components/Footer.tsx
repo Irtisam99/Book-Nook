@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import {
   BookOpen,
@@ -6,6 +7,7 @@ import {
   MapPin,
   Phone,
 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const exploreLinks = [
   { label: "Home", href: "/" },
@@ -31,6 +33,8 @@ const socialIcons = [
 ];
 
 export default function Footer() {
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
   return (
     <footer className="bg-footer text-footer-foreground">
       <div className="mx-auto grid w-full max-w-[1440px] gap-x-10 gap-y-12 px-6 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.85fr_0.85fr_1.15fr] lg:gap-x-12 lg:px-14 lg:py-20">
@@ -81,21 +85,49 @@ export default function Footer() {
         </nav>
 
         <nav aria-label="Your library">
+
+
           <h2 className="text-xs font-semibold tracking-[0.25em] text-gold uppercase">
             Your Library
           </h2>
-          <ul className="mt-6 space-y-4">
-            {libraryLinks.map((link) => (
-              <li key={link.label}>
-                <Link
-                  href={link.href}
-                  className="text-[15px] text-footer-muted transition-colors hover:text-footer-foreground"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {user && !isPending ? (
+            <>
+              <ul className="mt-6 space-y-4">
+                {libraryLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-[15px] text-footer-muted transition-colors hover:text-footer-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+
+            <ul className="mt-6 space-y-4">
+                <li>
+                  <Link
+                    href={"/login"}
+                    className="text-[15px] text-footer-muted transition-colors hover:text-footer-foreground"
+                  >
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href={"/register"}
+                    className="text-[15px] text-footer-muted transition-colors hover:text-footer-foreground"
+                  >
+                    Become a Member
+                  </Link>
+                </li>
+            
+            </ul>
+
+          )}
         </nav>
 
         <div>
