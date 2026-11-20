@@ -2,15 +2,25 @@
 
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, Eye, EyeOff, Check } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
-export default function RegisterPage() {
+function safeRedirectDestination(value: string | null) {
+    if (!value || !value.startsWith("/") || value.startsWith("//")) {
+        return "/";
+    }
+    return value;
+}
+
+function RegisterPageContent() {
     const [showPassword, setShowPassword] = useState(false);
     const [password, setPassword] = useState('');
     const [photoUrl, setPhotoUrl] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const searchParams = useSearchParams();
+    const redirectTo = safeRedirectDestination(searchParams.get("redirectTo"));
     const passwordRules = [
         { met: /[A-Z]/.test(password), label: "One uppercase letter" },
         { met: /[a-z]/.test(password), label: "One lowercase letter" },
@@ -94,7 +104,8 @@ export default function RegisterPage() {
                 name: user.name as string,
                 email: user.email as string,
                 password: password,
-                image: user.photo as string || fallbackImage
+                image: user.photo as string || fallbackImage,
+                callbackURL: redirectTo,
             })
 
             if (error) {
@@ -108,7 +119,7 @@ export default function RegisterPage() {
                 setPhotoUrl("");
                 setErrors({});
 
-                window.location.replace(`${window.location.origin}/`);
+                window.location.replace(`${window.location.origin}${redirectTo}`);
             }
         } catch (error) {
             toast.error(
@@ -127,8 +138,9 @@ export default function RegisterPage() {
 
     const handleGoogleSignUp = async () => {
         try{
-            const data=await authClient.signIn.social({
+            await authClient.signIn.social({
                 provider: "google",
+                callbackURL: `${window.location.origin}${redirectTo}`,
             })
         }catch(error){
             toast.error(
@@ -354,12 +366,20 @@ export default function RegisterPage() {
                     </p>
                     <p className="mt-5 text-center text-[14px] text-muted-foreground">
                         Already a member?{" "}
-                        <Link href="/login" className="font-semibold text-primary hover:underline">
+                        <Link href={`/login?redirectTo=${encodeURIComponent(redirectTo)}`} className="font-semibold text-primary hover:underline">
                             Log in
                         </Link>
                     </p>
                 </div>
             </section>
         </main>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={null}>
+            <RegisterPageContent />
+        </Suspense>
     );
 }

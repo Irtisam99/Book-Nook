@@ -5,12 +5,23 @@ import { BookOpen, Eye, EyeOff } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function safeRedirectDestination(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+  return value;
+}
+
+function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const searchParams = useSearchParams();
+  const redirectTo = safeRedirectDestination(searchParams.get("redirectTo"));
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,6 +48,7 @@ export default function LoginPage() {
       const { data, error } = await authClient.signIn.email({
         email: user.email as string,
         password: user.password as string,
+        callbackURL: redirectTo,
       });
       if (error) {
         toast.error(error.message);
@@ -48,7 +60,7 @@ export default function LoginPage() {
         setEmail("");
         setPassword("");
         setErrors({});
-        window.location.replace(`${window.location.origin}/`);
+        window.location.replace(`${window.location.origin}${redirectTo}`);
 
       }
 
@@ -59,12 +71,14 @@ export default function LoginPage() {
           : "Login failed. Please try again."
       );
     }
+
   }
 
 const handleGoogleLogin = async () => {
   try{
-    const data=await authClient.signIn.social({
+    await authClient.signIn.social({
       provider: "google",
+      callbackURL: `${window.location.origin}${redirectTo}`,
     })
   }catch(error){
     toast.error(
@@ -255,7 +269,7 @@ const handleGoogleLogin = async () => {
           <p className="mt-6 text-center text-[11px] text-muted-foreground">
             New to BookNook?{" "}
             <Link
-              href="/register"
+              href={`/register?redirectTo=${encodeURIComponent(redirectTo)}`}
               className="font-semibold text-primary hover:underline"
             >
               Create an account
@@ -264,5 +278,13 @@ const handleGoogleLogin = async () => {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
