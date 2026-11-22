@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Check, ImagePlus, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,7 +22,6 @@ type FormErrors = Partial<
 >;
 
 export default function AddBookPage() {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -157,13 +155,12 @@ export default function AddBookPage() {
         }),
       });
 
+      const result = await response.json();
+      console.log("Server response:", result);
+
       if (!response.ok) {
         let message = "The book could not be added.";
-        try {
-          const result = (await response.json()) as { message?: string };
-          if (result.message) message = result.message;
-        } catch {
-        }
+        if (result.message) message = result.message;
         throw new Error(message);
       }
 
@@ -177,7 +174,6 @@ export default function AddBookPage() {
       setImagePreview("");
       setImageFile(null);
       setErrors({});
-      // router.push("/my-books");
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -250,11 +246,10 @@ export default function AddBookPage() {
                         }));
                       }}
                       placeholder="e.g. The Remains of the Day"
-                      className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${
-                        errors.title
+                      className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.title
                           ? "border-destructive"
                           : "border-border focus:border-ring"
-                      }`}
+                        }`}
                     />
                     {errors.title ? (
                       <p className="mt-1.5 text-xs text-destructive">
@@ -282,11 +277,10 @@ export default function AddBookPage() {
                           }));
                         }}
                         placeholder="e.g. Kazuo Ishiguro"
-                        className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${
-                          errors.author
+                        className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.author
                             ? "border-destructive"
                             : "border-border focus:border-ring"
-                        }`}
+                          }`}
                       />
                       {errors.author ? (
                         <p className="mt-1.5 text-xs text-destructive">
@@ -311,11 +305,10 @@ export default function AddBookPage() {
                             category: undefined,
                           }));
                         }}
-                        className={`h-12 w-full appearance-none rounded-[3px] bg-background px-4 text-sm outline-none ${
-                          errors.category
+                        className={`h-12 w-full appearance-none rounded-[3px] bg-background px-4 text-sm outline-none ${errors.category
                             ? "border border-destructive"
                             : "border border-border"
-                        }`}
+                          }`}
                       >
                         <option value="" disabled>
                           Select a category
@@ -356,11 +349,10 @@ export default function AddBookPage() {
                       }}
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={handleDrop}
-                      className={`flex h-36 cursor-pointer flex-col items-center justify-center border border-dashed px-4 text-center transition-colors ${
-                        errors.image
+                      className={`flex h-36 cursor-pointer flex-col items-center justify-center border border-dashed px-4 text-center transition-colors ${errors.image
                           ? "border-destructive"
                           : "border-border hover:border-primary/50 hover:bg-muted/30"
-                      }`}
+                        }`}
                     >
                       <span className="flex size-9 items-center justify-center rounded-full bg-muted text-primary">
                         <ImagePlus className="size-4" aria-hidden="true" />
@@ -408,11 +400,10 @@ export default function AddBookPage() {
                         }));
                       }}
                       placeholder="What makes this book worth borrowing? A sentence or two for fellow readers."
-                      className={`min-h-28 w-full resize-none rounded-[3px] border bg-background px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${
-                        errors.description
+                      className={`min-h-28 w-full resize-none rounded-[3px] border bg-background px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.description
                           ? "border-destructive"
                           : "border-border focus:border-ring"
-                      }`}
+                        }`}
                     />
                     {errors.description ? (
                       <p className="mt-1.5 text-xs text-destructive">
@@ -440,11 +431,10 @@ export default function AddBookPage() {
                           copies: undefined,
                         }));
                       }}
-                      className={`h-12 w-full max-w-72 rounded-[3px] border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-ring/20 ${
-                        errors.copies
+                      className={`h-12 w-full max-w-72 rounded-[3px] border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-ring/20 ${errors.copies
                           ? "border-destructive"
                           : "border-border focus:border-ring"
-                      }`}
+                        }`}
                     />
                     {errors.copies ? (
                       <p className="mt-1.5 text-xs text-destructive">

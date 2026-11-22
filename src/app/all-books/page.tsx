@@ -1,11 +1,5 @@
-import React from 'react';
+import { redirect } from "next/navigation";
 
-const AllBook = () => {
-    return (
-        <div>
-            All-books
-        </div>
-    );
-};
-
-export default AllBook;
+export default function AllBooksRedirect() {
+  redirect("/books");
+}

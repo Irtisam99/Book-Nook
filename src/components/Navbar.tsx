@@ -36,7 +36,7 @@ import { toast } from "sonner";
 
 const links = [
   { label: "Home", href: "/" },
-  { label: "All Books", href: "/all-books" },
+  { label: "All Books", href: "/books" },
   { label: "Add Book", href: "/add-book" },
   { label: "My Books", href: "/my-books" },
   { label: "My Borrows", href: "/my-borrows" },
