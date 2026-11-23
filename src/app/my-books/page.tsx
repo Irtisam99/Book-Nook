@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { ImagePlus, Pencil, Plus, Trash2, TriangleAlert, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
@@ -15,7 +15,6 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
@@ -71,6 +70,10 @@ export default function MyBooksPage() {
   const [editAuthor, setEditAuthor] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editCopies, setEditCopies] = useState("1");
+  const [editDescription, setEditDescription] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState("");
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const errorToastShown = useRef(false);
 
@@ -148,8 +151,39 @@ export default function MyBooksPage() {
     setEditAuthor(book.author || "");
     setEditCategory(book.category || "");
     setEditCopies(String(book.totalCopies || 1));
+    setEditDescription(book.description || "");
+    setEditImageFile(null);
+    setEditImagePreview(book.image || "");
   }
 
+  function selectEditImage(file?: File) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("The image must be smaller than 5 MB.");
+      return;
+    }
+    if (editImagePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(editImagePreview);
+    }
+    setEditImagePreview(URL.createObjectURL(file));
+    setEditImageFile(file);
+  }
+
+  function handleEditImageChange(event: ChangeEvent<HTMLInputElement>) {
+    selectEditImage(event.target.files?.[0]);
+  }
+
+  function handleEditImageDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    selectEditImage(event.dataTransfer.files?.[0]);
+  }
+
+
+  
   async function handleEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editBook) return;
@@ -161,9 +195,47 @@ export default function MyBooksPage() {
       toast.error("Total copies must be at least 1.");
       return;
     }
+    const currentAvailable =
+      typeof editBook.availableCopies === "number"
+        ? editBook.availableCopies
+        : editBook.totalCopies || 0;
+    const onLoan = Math.max(
+      (editBook.totalCopies || 0) - currentAvailable,
+      0,
+    );
+    if (Number(editCopies) < onLoan) {
+      toast.error(
+        `Total copies cannot be lower than ${onLoan} because ${onLoan} copies are on loan.`,
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      let imageUrl = editBook.image;
+      if (editImageFile) {
+        const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+        if (!apiKey) throw new Error("Image upload is not configured.");
+        const formData = new FormData();
+        formData.append("image", editImageFile);
+        const uploadResponse = await fetch(
+          `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`,
+          { method: "POST", body: formData },
+        );
+        if (!uploadResponse.ok) {
+          throw new Error("The book cover could not be uploaded.");
+        }
+        const uploadResult = (await uploadResponse.json()) as {
+          success?: boolean;
+          data?: { url?: string; display_url?: string };
+        };
+        imageUrl =
+          uploadResult.data?.display_url || uploadResult.data?.url || imageUrl;
+        if (!uploadResult.success || !imageUrl) {
+          throw new Error("The image service did not return a valid URL.");
+        }
+      }
+
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
@@ -176,6 +248,12 @@ export default function MyBooksPage() {
             author: editAuthor.trim(),
             category: editCategory,
             totalCopies: Number(editCopies),
+            availableCopies: Math.max(
+              Number(editCopies) - onLoan,
+              0,
+            ),
+            description: editDescription.trim(),
+            image: imageUrl,
           }),
         },
       );
@@ -189,6 +267,12 @@ export default function MyBooksPage() {
                 author: editAuthor.trim(),
                 category: editCategory,
                 totalCopies: Number(editCopies),
+                availableCopies: Math.max(
+                  Number(editCopies) - onLoan,
+                  0,
+                ),
+                description: editDescription.trim(),
+                image: imageUrl,
               }
             : book,
         ),
@@ -205,6 +289,8 @@ export default function MyBooksPage() {
       setIsSubmitting(false);
     }
   }
+
+
 
   async function handleDelete() {
     if (!deleteBook) return;
@@ -404,22 +490,75 @@ export default function MyBooksPage() {
           if (!open) setDeleteBook(null);
         }}
       >
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this book?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes &quot;{deleteBook?.title}&quot; from the library and
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogContent className="w-[480px] max-w-[calc(100%-2rem)] rounded-none p-0">
+          <div className="border-b border-border px-7 py-6">
+            <p className="mb-2 text-[9px] font-semibold tracking-[0.28em] text-gold uppercase">
+              Remove from library
+            </p>
+            <div className="flex items-center justify-between">
+              <AlertDialogTitle className="font-heading text-3xl font-medium text-foreground">
+                Delete this book?
+              </AlertDialogTitle>
+              <AlertDialogCancel className="size-8 border-0 bg-transparent p-0 text-muted-foreground hover:bg-muted">
+                <X className="size-4" />
+                <span className="sr-only">Close</span>
+              </AlertDialogCancel>
+            </div>
+          </div>
+
+          <div className="px-7 pt-6">
+            {deleteBook ? (
+              <div className="flex gap-5">
+                <div className="relative h-[92px] w-[68px] shrink-0 overflow-hidden border border-border bg-muted">
+                  {deleteBook.image ? (
+                    <Image
+                      src={deleteBook.image}
+                      alt={deleteBook.title || "Book cover"}
+                      fill
+                      unoptimized
+                      sizes="68px"
+                      className="object-contain p-1"
+                    />
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1 pt-1">
+                  <p className="line-clamp-2 break-words font-heading text-xl leading-tight text-foreground">
+                    {deleteBook.title || "Untitled"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    by {deleteBook.author || "Unknown author"}
+                  </p>
+                  <AlertDialogDescription className="mt-3 break-words text-xs leading-5 text-foreground/75">
+                    This permanently removes the title and its details from
+                    BookNook. This can&apos;t be undone.
+                  </AlertDialogDescription>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex min-h-[56px] items-center gap-3 border-l-2 border-gold bg-gold/5 px-4 text-xs text-foreground/75">
+              <TriangleAlert className="size-4 shrink-0 text-gold" />
+              {Math.max(
+                (deleteBook?.totalCopies || 0) -
+                  (typeof deleteBook?.availableCopies === "number"
+                    ? deleteBook.availableCopies
+                    : deleteBook?.totalCopies || 0),
+                0,
+              )}{" "}
+              copies are currently on loan. Active loans will be closed.
+            </div>
+          </div>
+
+          <AlertDialogFooter className="mt-6 border-t border-border bg-transparent p-5">
+            <AlertDialogCancel className="h-10 min-w-28 border border-border bg-card">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-10 min-w-36 bg-primary text-primary-foreground hover:bg-primary/85"
             >
-              {isSubmitting ? <Spinner /> : "Delete"}
+              {isSubmitting ? <Spinner /> : <><Trash2 className="size-4" /> Confirm Delete</>}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -431,65 +570,167 @@ export default function MyBooksPage() {
           if (!open) setEditBook(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit book</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleEdit} className="grid gap-4">
-            <label className="grid gap-2 text-xs font-semibold">
-              Book title
-              <input
-                value={editTitle}
-                onChange={(event) => setEditTitle(event.target.value)}
-                className="h-11 rounded-[3px] border border-border px-3 text-sm font-normal outline-none focus:border-ring"
-              />
-            </label>
-            <label className="grid gap-2 text-xs font-semibold">
-              Author name
-              <input
-                value={editAuthor}
-                onChange={(event) => setEditAuthor(event.target.value)}
-                className="h-11 rounded-[3px] border border-border px-3 text-sm font-normal outline-none focus:border-ring"
-              />
-            </label>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-xs font-semibold">
-                Category
-                <select
-                  value={editCategory}
-                  onChange={(event) => setEditCategory(event.target.value)}
-                  className="h-11 rounded-[3px] border border-border bg-card px-3 text-sm font-normal outline-none"
-                >
-                  {categories.map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
+        <DialogContent
+          showCloseButton={false}
+          className="flex max-h-[calc(100vh-3rem)] w-[640px] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-none p-0"
+        >
+          <div className="shrink-0 border-b border-border px-7 py-5">
+            <p className="mb-2 text-[9px] font-semibold tracking-[0.28em] text-gold uppercase">
+              Edit book
+            </p>
+            <DialogHeader className="flex-row items-center justify-between">
+              <DialogTitle className="font-heading text-3xl text-foreground">
+                {editBook?.title || "Book"}
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={() => setEditBook(null)}
+                className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogHeader>
+          </div>
+
+          <form onSubmit={handleEdit} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-7 py-6">
+              <label className="grid gap-2 text-xs font-semibold text-foreground">
+                Book title
+                <input
+                  value={editTitle}
+                  onChange={(event) => setEditTitle(event.target.value)}
+                  className="h-11 rounded-[3px] border border-gold/60 px-3 text-sm font-normal outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                />
               </label>
-              <label className="grid gap-2 text-xs font-semibold">
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-xs font-semibold text-foreground">
+                  Author name
+                  <input
+                    value={editAuthor}
+                    onChange={(event) => setEditAuthor(event.target.value)}
+                    className="h-11 rounded-[3px] border border-border px-3 text-sm font-normal outline-none focus:border-ring"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-semibold text-foreground">
+                  Category
+                  <select
+                    value={editCategory}
+                    onChange={(event) => setEditCategory(event.target.value)}
+                    className="h-11 rounded-[3px] border border-border bg-card px-3 text-sm font-normal outline-none"
+                  >
+                    {categories.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold text-foreground">
+                  Book cover image <span className="font-normal text-muted-foreground">(optional)</span>
+                </p>
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleEditImageChange}
+                  className="hidden"
+                />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => editFileInputRef.current?.click()}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      editFileInputRef.current?.click();
+                    }
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleEditImageDrop}
+                  className="flex h-32 cursor-pointer flex-col items-center justify-center border border-dashed border-border bg-card px-4 text-center"
+                >
+                  {editImagePreview ? (
+                    <div className="relative h-20 w-16">
+                      <Image
+                        src={editImagePreview}
+                        alt="New cover preview"
+                        fill
+                        unoptimized
+                        sizes="64px"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="flex size-9 items-center justify-center rounded-full bg-muted text-primary">
+                      <ImagePlus className="size-4" />
+                    </span>
+                  )}
+                  <p className="mt-2 text-xs font-medium text-foreground">
+                    Drag an image here, or <span className="text-primary">browse</span>
+                  </p>
+                  <p className="mt-1 text-[9px] text-muted-foreground">
+                    JPG, PNG or WebP up to 5 MB · portrait works best
+                  </p>
+                </div>
+                {!editImageFile && (
+                  <p className="mt-2 text-[9px] text-muted-foreground">
+                    No image? We&apos;ll design an elegant typographic cover for you.
+                  </p>
+                )}
+              </div>
+
+              <label className="grid gap-2 text-xs font-semibold text-foreground">
+                <span className="flex items-center justify-between">
+                  <span>Short description</span>
+                  <span className="font-normal text-muted-foreground">
+                    {editDescription.length}/400
+                  </span>
+                </span>
+                <textarea
+                  value={editDescription}
+                  maxLength={400}
+                  onChange={(event) => setEditDescription(event.target.value)}
+                  className="min-h-24 resize-none rounded-[3px] border border-border px-3 py-3 text-sm font-normal outline-none focus:border-ring"
+                />
+              </label>
+
+              <label className="grid gap-2 text-xs font-semibold text-foreground">
                 Total copies
                 <input
                   type="number"
                   min={1}
                   value={editCopies}
                   onChange={(event) => setEditCopies(event.target.value)}
-                  className="h-11 rounded-[3px] border border-border px-3 text-sm font-normal outline-none focus:border-ring"
+                  className="h-11 max-w-[285px] rounded-[3px] border border-border px-3 text-sm font-normal outline-none focus:border-ring"
                 />
+                <span className="text-[9px] font-normal text-muted-foreground">
+                  {Math.max(
+                    (editBook?.totalCopies || 0) -
+                      (typeof editBook?.availableCopies === "number"
+                        ? editBook.availableCopies
+                        : editBook?.totalCopies || 0),
+                    0,
+                  )} copies are currently on loan, so total copies can&apos;t go below that number.
+                </span>
               </label>
             </div>
-            <DialogFooter>
+
+            <DialogFooter className="shrink-0 border-t border-border bg-card p-5">
               <button
                 type="button"
                 onClick={() => setEditBook(null)}
-                className="h-10 border border-border px-5 text-xs font-semibold"
+                className="h-10 min-w-28 border border-border bg-card px-5 text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-10 bg-primary px-5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                className="h-10 min-w-36 bg-primary px-5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
               >
-                {isSubmitting ? <Spinner /> : "Save changes"}
+                {isSubmitting ? <Spinner /> : "Save Changes"}
               </button>
             </DialogFooter>
           </form>
