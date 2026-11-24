@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import BookCard, { type BookCardData } from "@/components/BookCard";
+import BorrowBookDialog from "@/components/BorrowBookDialog";
 
 export const instant = false;
 
@@ -323,14 +324,13 @@ export default async function BookDetailsPage({
               </div>
 
               <div className="mt-5 flex items-center gap-4">
-                <button
-                  type="button"
-                  disabled={availableCopies < 1}
-                  className="h-12 rounded-[10px] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
-                >
-                  {availableCopies < 1 ? "Not Available" : "Borrow This Book"}
-                </button>
-
+                <BorrowBookDialog
+                  title={title}
+                  author={author}
+                  image={image}
+                  availableCopies={availableCopies}
+                  totalCopies={totalCopies}
+                />
               </div>
             </article>
           </div>
