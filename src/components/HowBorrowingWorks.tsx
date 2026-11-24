@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { BookOpen, CalendarCheck2, Compass, RotateCcw } from "lucide-react";
+
+import { authClient } from "@/lib/auth-client";
 
 const steps = [
   {
@@ -33,6 +37,9 @@ const steps = [
 ];
 
 export default function HowBorrowingWorks() {
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
   return (
     <section className="bg-white dark:bg-card">
       <div className="mx-auto w-full max-w-[1280px] px-6 py-16 lg:py-24">
@@ -78,12 +85,21 @@ export default function HowBorrowingWorks() {
 
         {/* CTA */}
         <div className="mt-16 flex justify-center">
-          <Link
-            href="/register"
-            className="inline-flex h-12 items-center rounded-md border border-border bg-card px-8 text-[15px] font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
-          >
-            Get your free membership
-          </Link>
+          {isPending ? (
+            <span
+              aria-busy="true"
+              className="inline-flex h-12 items-center rounded-md border border-border bg-card px-8 text-[15px] font-medium text-muted-foreground"
+            >
+              Checking your account…
+            </span>
+          ) : (
+            <Link
+              href={user ? "/add-book" : "/register"}
+              className="inline-flex h-14 items-center rounded-md border border-border bg-card px-12 text-[20px] font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              {user ? "Share a Book" : "Get your free membership"}
+            </Link>
+          )}
         </div>
       </div>
     </section>

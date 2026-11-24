@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -50,10 +51,16 @@ function getBookId(book: RawBook) {
   return book.id || "";
 }
 
-export default function AllBooksPage() {
+function AllBooksPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedCategory = searchParams.get("category");
+  const category =
+    categories.find(
+      (item) => item.toLowerCase() === requestedCategory?.toLowerCase(),
+    ) || "All";
   const [books, setBooks] = useState<BookCardData[]>([]);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
   const [availableOnly, setAvailableOnly] = useState(false);
   const [sort, setSort] = useState("Newest arrivals");
   const [isLoading, setIsLoading] = useState(true);
@@ -200,7 +207,14 @@ export default function AllBooksPage() {
                 <button
                   key={item}
                   type="button"
-                  onClick={() => setCategory(item)}
+                  onClick={() =>
+                    router.replace(
+                      item === "All"
+                        ? "/books"
+                        : `/books?category=${encodeURIComponent(item.toLowerCase())}`,
+                      { scroll: false },
+                    )
+                  }
                   className={`h-9 rounded-full px-4 text-xs font-medium transition-colors ${
                     category === item
                       ? "bg-primary text-primary-foreground"
@@ -282,5 +296,19 @@ export default function AllBooksPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AllBooksPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-[720px] items-center justify-center bg-background">
+          <Spinner className="size-7" />
+        </main>
+      }
+    >
+      <AllBooksPageContent />
+    </Suspense>
   );
 }

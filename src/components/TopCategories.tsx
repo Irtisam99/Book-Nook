@@ -51,7 +51,7 @@ const categories = [
 
 export default function TopCategories() {
   return (
-    <section aria-labelledby="top-categories-title" className="bg-background">
+    <section aria-labelledby="top-categories-title" className="bg-background mt-[-50px]">
       <div className="mx-auto w-full max-w-[1440px] px-6 py-16 lg:px-14 lg:py-24">
         <div className="mb-10">
           <div className="flex items-center gap-3">
