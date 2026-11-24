@@ -325,6 +325,7 @@ export default async function BookDetailsPage({
 
               <div className="mt-5 flex items-center gap-4">
                 <BorrowBookDialog
+                  bookId={getBookId(book)}
                   title={title}
                   author={author}
                   image={image}

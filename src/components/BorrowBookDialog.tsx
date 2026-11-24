@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 import { BookOpen, CalendarDays, Clock3, LibraryBig, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -14,6 +16,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 
 type BorrowBookDialogProps = {
+  bookId: string;
   title: string;
   author: string;
   image?: string;
@@ -27,16 +30,98 @@ function getToday() {
   return localDate.toISOString().slice(0, 10);
 }
 
+function getDateAfterDays(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  const result = new Date(Date.UTC(year, month - 1, day + days));
+  return result.toISOString().slice(0, 10);
+}
+
 export default function BorrowBookDialog({
+  bookId,
   title,
   author,
   image,
   availableCopies,
   totalCopies,
 }: BorrowBookDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [borrowDate] = useState(getToday);
+  const [returnDate, setReturnDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: session } = authClient.useSession();
   const user = session?.user;
+  const latestReturnDate = getDateAfterDays(borrowDate, 30);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!user?.email) {
+      toast.error("Your account details are not available. Please sign in again.");
+      return;
+    }
+    if (!returnDate || returnDate < borrowDate || returnDate > latestReturnDate) {
+      toast.error("Choose a return date within 30 days of today.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/borrows`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookId,
+          bookTitle: title,
+          bookImage: image || "",
+          userEmail: user.email,
+          borrowDate,
+          returnDate,
+        }),
+      });
+
+      const payload: unknown = await response.json().catch(() => null);
+      const responseMessage =
+        typeof payload === "object" &&
+        payload !== null &&
+        "message" in payload &&
+        typeof payload.message === "string"
+          ? payload.message
+          : typeof payload === "object" &&
+              payload !== null &&
+              "error" in payload &&
+              typeof payload.error === "string"
+            ? payload.error
+            : "";
+
+      if (!response.ok) {
+        if (
+          response.status === 409 ||
+          /already|duplicate|borrowed/i.test(responseMessage)
+        ) {
+          toast.error("You have already borrowed this book and have not returned it yet.");
+        } else {
+          toast.error(responseMessage || "The book could not be borrowed. Please try again.");
+        }
+        return;
+      }
+
+      toast.success("Book borrowed successfully.");
+      setOpen(false);
+      setReturnDate("");
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "The book could not be borrowed. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,7 +150,8 @@ export default function BorrowBookDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 px-6 py-5">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-5 px-6 py-5">
           <div className="flex items-center gap-4 border border-border bg-card p-3">
             <div className="relative flex h-[88px] w-[62px] shrink-0 items-center justify-center overflow-hidden bg-[#f4f1e9]">
               {image ? (
@@ -107,7 +193,7 @@ export default function BorrowBookDialog({
                 <input
                   id="borrow-date"
                   type="date"
-                  value={getToday()}
+                  value={borrowDate}
                   readOnly
                   className="h-11 w-full appearance-none border border-border bg-muted/40 px-3 pr-9 text-sm text-foreground outline-none"
                 />
@@ -127,6 +213,11 @@ export default function BorrowBookDialog({
               <input
                 id="return-date"
                 type="date"
+                min={borrowDate}
+                max={latestReturnDate}
+                value={returnDate}
+                onChange={(event) => setReturnDate(event.target.value)}
+                required
                 className="h-11 w-full border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
               />
             </div>
@@ -173,23 +264,26 @@ export default function BorrowBookDialog({
               any time.
             </p>
           </div>
-        </div>
+          </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="h-10 rounded-md border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="h-10 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85"
-          >
-            Confirm Borrow
-          </button>
-        </div>
+          <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              disabled={isSubmitting}
+              className="h-10 rounded-md border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || !user?.email}
+              className="h-10 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? "Borrowing..." : "Confirm Borrow"}
+            </button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
