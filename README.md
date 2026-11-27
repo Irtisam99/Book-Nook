@@ -4,7 +4,7 @@ BookNook is a small online library for discovering books, sharing titles, and
 borrowing books from other readers. Members can manage their contributed books,
 track active loans, and return borrowed titles when they are finished.
 
-**Live site:** Not deployed yet.
+**Live site:** https://book-nook-lemon.vercel.app/
 
 ## Features
 
