@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type BorrowBookDialogProps = {
   bookId: string;
@@ -66,12 +67,15 @@ export default function BorrowBookDialog({
     }
 
     setIsSubmitting(true);
+    const token = await getTokenFromClient();
     try {
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(`${apiUrl}/borrows`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+         },
         body: JSON.stringify({
           bookId,
           bookTitle: title,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Suspense } from "react";
@@ -16,6 +16,10 @@ function safeRedirectDestination(value: string | null) {
 }
 
 function LoginPageContent() {
+  useEffect(() => {
+    document.title = "BookNook | Login";
+  }, []);
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

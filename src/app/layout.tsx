@@ -4,7 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
-
+import Script from "next/script";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -40,7 +40,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script
+        <Script
+          id="theme-script"
           dangerouslySetInnerHTML={{
             __html:
               'try{var t=localStorage.getItem("booknook-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}',

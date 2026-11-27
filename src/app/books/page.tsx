@@ -9,6 +9,7 @@ import BookCard, {
   type BookCardData,
 } from "@/components/BookCard";
 import { Spinner } from "@/components/ui/spinner";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type RawBook = {
   _id?: string | { $oid?: string };
@@ -77,11 +78,15 @@ function AllBooksPageContent() {
     async function loadBooks() {
       setIsLoading(true);
       setLoadError("");
+      const token=await getTokenFromClient()
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const response = await fetch(`${apiUrl}/books`, {
           cache: "no-store",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         });
 
         if (!response.ok) throw new Error("The books could not be loaded.");

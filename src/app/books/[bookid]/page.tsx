@@ -12,6 +12,9 @@ import {
 
 import BookCard, { type BookCardData } from "@/components/BookCard";
 import BorrowBookDialog from "@/components/BorrowBookDialog";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { getTokenFromServer } from "@/lib/getTokenFromServer";
 
 export const instant = false;
 
@@ -51,19 +54,26 @@ function formatDate(value?: string) {
 }
 
 async function getBooks(): Promise<Book[]> {
+  const token = await getTokenFromServer();
   const apiUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const response = await fetch(`${apiUrl}/books`, { cache: "no-store" });
+  const response = await fetch(`${apiUrl}/books`, { cache: "no-store", headers: { authorization: `Bearer ${token}` } });
   if (!response.ok) return [];
   const payload = await response.json();
   return Array.isArray(payload) ? payload : payload.books || [];
 }
 
 async function getBook(bookId: string): Promise<Book | null> {
+
+  const token=await getTokenFromServer();
+
   const apiUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const response = await fetch(`${apiUrl}/books/${bookId}`, {
     cache: "no-store",
+    headers: {
+      authorization:`Bearer ${token}`
+    }
   });
   if (!response.ok) return null;
   const payload = await response.json();
@@ -79,9 +89,11 @@ export async function generateMetadata({
   const book = await getBook(bookid);
 
   return {
-    title: book?.title
-      ? `BookNook | ${book.title}`
-      : "BookNook | Book Details",
+    title: {
+      absolute: book?.title
+        ? `BookNook | ${book.title}`
+        : "BookNook | Book Details",
+    },
   };
 }
 
@@ -91,6 +103,8 @@ export default async function BookDetailsPage({
   params: Promise<{ bookid: string }>;
 }) {
   const { bookid } = await params;
+
+
   const [book, allBooks] = await Promise.all([
     getBook(bookid),
     getBooks(),
@@ -134,10 +148,10 @@ export default async function BookDetailsPage({
     relatedBooks.length >= 3
       ? relatedBooks
       : allBooks
-          .filter((item) => getBookId(item) !== getBookId(book))
-          .filter((item) => !relatedBooks.includes(item))
-          .slice(0, 3 - relatedBooks.length)
-          .concat(relatedBooks);
+        .filter((item) => getBookId(item) !== getBookId(book))
+        .filter((item) => !relatedBooks.includes(item))
+        .slice(0, 3 - relatedBooks.length)
+        .concat(relatedBooks);
 
   const relatedCards: BookCardData[] = relatedFallback
     .slice(0, 3)

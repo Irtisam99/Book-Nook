@@ -7,6 +7,8 @@ import { ArrowRight, BookOpen, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
+import { Spinner } from "@/components/ui/spinner";
 
 type Borrow = {
   _id?: string;
@@ -103,11 +105,15 @@ export default function MyBorrowsPage() {
     async function loadBorrows() {
       setIsLoading(true);
       setLoadError("");
+      const token = await getTokenFromClient();
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const response = await fetch(`${apiUrl}/borrows`, {
           cache: "no-store",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         });
         if (!response.ok) {
           throw new Error("Borrowed books could not be loaded.");
@@ -165,12 +171,17 @@ export default function MyBorrowsPage() {
     }
 
     setReturningId(borrowId);
+    const token = await getTokenFromClient();
     try {
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
         `${apiUrl}/borrows/${encodeURIComponent(borrowId)}`,
-        { method: "DELETE" },
+        { method: "DELETE" ,
+          headers: {
+            authorization: `Bearer ${token}`,
+          }
+        },
       );
       if (!response.ok) {
         const payload: unknown = await response.json().catch(() => null);
@@ -278,8 +289,11 @@ export default function MyBorrowsPage() {
               </button>
             </div>
           ) : isLoading || isPending ? (
-            <div className="border border-border bg-card px-5 py-12 text-center text-xs text-muted-foreground">
-              Loading your borrowed books…
+            <div
+              className="flex min-h-80 items-center justify-center border border-border bg-card"
+              aria-busy="true"
+            >
+              <Spinner className="size-7" />
             </div>
           ) : activeBorrows.length === 0 ? (
             <div className="border border-border bg-card px-5 py-12 text-center">

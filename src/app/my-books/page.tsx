@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type Book = {
   _id?: string;
@@ -89,11 +90,13 @@ export default function MyBooksPage() {
     async function loadBooks() {
       setIsLoading(true);
       setLoadError("");
+      const token = await getTokenFromClient();
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const response = await fetch(`${apiUrl}/books`, {
           cache: "no-store",
+          headers: {authorization: `Bearer ${token}`},
         });
         if (!response.ok) throw new Error("My books could not be loaded.");
         const payload = await response.json();
@@ -236,13 +239,16 @@ export default function MyBooksPage() {
         }
       }
 
+      const token=await getTokenFromClient()
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
         `${apiUrl}/books/${getBookId(editBook)}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+          authorization: `Bearer ${token}`
+          },
           body: JSON.stringify({
             title: editTitle.trim(),
             author: editAuthor.trim(),
@@ -295,12 +301,18 @@ export default function MyBooksPage() {
   async function handleDelete() {
     if (!deleteBook) return;
     setIsSubmitting(true);
+    const token=await getTokenFromClient()
     try {
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
         `${apiUrl}/books/${getBookId(deleteBook)}`,
-        { method: "DELETE" },
+
+        { method: "DELETE",
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+         },
       );
       if (!response.ok) throw new Error("The book could not be deleted.");
       setBooks((current) =>

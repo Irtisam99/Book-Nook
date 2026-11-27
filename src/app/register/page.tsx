@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight, BookOpen, Eye, EyeOff, Check } from "lucide-react";
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
@@ -15,6 +15,10 @@ function safeRedirectDestination(value: string | null) {
 }
 
 function RegisterPageContent() {
+    useEffect(() => {
+        document.title = "BookNook | Register";
+    }, []);
+
     const [showPassword, setShowPassword] = useState(false);
     const [password, setPassword] = useState('');
     const [photoUrl, setPhotoUrl] = useState("");

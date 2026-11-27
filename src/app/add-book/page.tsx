@@ -1,5 +1,5 @@
 "use client";
-
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 import {
   ChangeEvent,
   DragEvent,
@@ -107,6 +107,8 @@ export default function AddBookPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const token=await getTokenFromClient()
+
     const nextErrors: FormErrors = {};
     if (!title.trim()) nextErrors.title = "Enter the book title.";
     if (!author.trim()) nextErrors.author = "Enter the author's name.";
@@ -139,7 +141,10 @@ export default function AddBookPage() {
       const addedDate = new Date().toISOString();
       const response = await fetch(`${apiUrl}/books`, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           title: title.trim(),
           author: author.trim(),
@@ -247,8 +252,8 @@ export default function AddBookPage() {
                       }}
                       placeholder="e.g. The Remains of the Day"
                       className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.title
-                          ? "border-destructive"
-                          : "border-border focus:border-ring"
+                        ? "border-destructive"
+                        : "border-border focus:border-ring"
                         }`}
                     />
                     {errors.title ? (
@@ -278,8 +283,8 @@ export default function AddBookPage() {
                         }}
                         placeholder="e.g. Kazuo Ishiguro"
                         className={`h-12 w-full rounded-[3px] border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.author
-                            ? "border-destructive"
-                            : "border-border focus:border-ring"
+                          ? "border-destructive"
+                          : "border-border focus:border-ring"
                           }`}
                       />
                       {errors.author ? (
@@ -306,8 +311,8 @@ export default function AddBookPage() {
                           }));
                         }}
                         className={`h-12 w-full appearance-none rounded-[3px] bg-background px-4 text-sm outline-none ${errors.category
-                            ? "border border-destructive"
-                            : "border border-border"
+                          ? "border border-destructive"
+                          : "border border-border"
                           }`}
                       >
                         <option value="" disabled>
@@ -350,8 +355,8 @@ export default function AddBookPage() {
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={handleDrop}
                       className={`flex h-36 cursor-pointer flex-col items-center justify-center border border-dashed px-4 text-center transition-colors ${errors.image
-                          ? "border-destructive"
-                          : "border-border hover:border-primary/50 hover:bg-muted/30"
+                        ? "border-destructive"
+                        : "border-border hover:border-primary/50 hover:bg-muted/30"
                         }`}
                     >
                       <span className="flex size-9 items-center justify-center rounded-full bg-muted text-primary">
@@ -401,8 +406,8 @@ export default function AddBookPage() {
                       }}
                       placeholder="What makes this book worth borrowing? A sentence or two for fellow readers."
                       className={`min-h-28 w-full resize-none rounded-[3px] border bg-background px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/65 focus:ring-2 focus:ring-ring/20 ${errors.description
-                          ? "border-destructive"
-                          : "border-border focus:border-ring"
+                        ? "border-destructive"
+                        : "border-border focus:border-ring"
                         }`}
                     />
                     {errors.description ? (
@@ -432,8 +437,8 @@ export default function AddBookPage() {
                         }));
                       }}
                       className={`h-12 w-full max-w-72 rounded-[3px] border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-ring/20 ${errors.copies
-                          ? "border-destructive"
-                          : "border-border focus:border-ring"
+                        ? "border-destructive"
+                        : "border-border focus:border-ring"
                         }`}
                     />
                     {errors.copies ? (

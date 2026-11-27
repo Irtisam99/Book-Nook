@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import BookCard, { type BookCardData } from "@/components/BookCard";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 type RawBook = {
   _id?: string | { $oid?: string };
@@ -97,12 +98,16 @@ export default function NewArrivals() {
     let ignore = false;
 
     async function loadBooks() {
+      const token = await getTokenFromClient();
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const response = await fetch(`${apiUrl}/books`, {
           cache: "no-store",
           signal: controller.signal,
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         });
         if (!response.ok) {
           throw new Error("New arrivals could not be loaded. Please try again.");
