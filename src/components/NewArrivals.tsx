@@ -102,7 +102,7 @@ export default function NewArrivals() {
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${apiUrl}/books`, {
+        const response = await fetch(`${apiUrl}/books?limit=6`, {
           cache: "no-store",
           signal: controller.signal,
           headers: {

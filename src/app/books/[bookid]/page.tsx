@@ -54,26 +54,22 @@ function formatDate(value?: string) {
 }
 
 async function getBooks(): Promise<Book[]> {
-  const token = await getTokenFromServer();
   const apiUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const response = await fetch(`${apiUrl}/books`, { cache: "no-store", headers: { authorization: `Bearer ${token}` } });
+  const response = await fetch(`${apiUrl}/books`, { cache: "no-store"});
   if (!response.ok) return [];
   const payload = await response.json();
   return Array.isArray(payload) ? payload : payload.books || [];
 }
 
 async function getBook(bookId: string): Promise<Book | null> {
-
-  const token=await getTokenFromServer();
-
+  const token= await getTokenFromServer()
   const apiUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const response = await fetch(`${apiUrl}/books/${bookId}`, {
     cache: "no-store",
-    headers: {
-      authorization:`Bearer ${token}`
-    }
+    headers: { authorization: `Bearer ${token}`,
+    },
   });
   if (!response.ok) return null;
   const payload = await response.json();
